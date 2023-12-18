@@ -8,13 +8,6 @@ from tqdm import tqdm
 
 Coordinates = Tuple[int, int]
 
-
-class CheckableQueue(PriorityQueue):
-    def __contains__(self, item):
-        with self.mutex:
-            return item in self.queue
-
-
 class Direction(Enum):
     NORTH = (-1, 0)
     EAST  = (0, +1)
@@ -114,11 +107,13 @@ class MetaGraph:
             if self.is_out_of_bounds(new_position):
                 continue
 
-            if len(prev_dir) >= self.move_limit:
-                if next_dir in prev_dir or next_dir.opposite() in prev_dir:
-                    # Last moves were all in the same direction, cannot continue
-                    # Or attempty a U turn, which is forbidden
-                    continue
+            if next_dir.opposite() in prev_dir:
+                continue
+
+            if next_dir in prev_dir and len(prev_dir) >= self.move_limit:
+                # Last moves were all in the same direction, cannot continue
+                # Or attempt a U turn, which is forbidden
+                continue
 
             if next_dir in prev_dir:
                 # Continuing in the same direction
@@ -136,7 +131,7 @@ class MetaGraph:
         distances: Dict[Node, int] = DISTANCES
         previous: Dict[Node, Node] = {}
 
-        node_index: Dict[Node, Node] = {}
+        node_index: Dict[Node, bool] = {}
 
         for i in range(self.max_x):
             for j in range(self.max_y):
@@ -144,53 +139,44 @@ class MetaGraph:
                     for f in range(1, self.move_limit + 1):
                         last_dir: List[Direction] = [dir] * f
                         node: Node = Node((i, j), last_dir)
-                        node_index[node] = node
+                        node_index[node] = False
                         distances[node] = 1_000_000_000  # Almost infinity right ?
-                        queue.put(node)
 
         # Special start node in "neutral" position
         start_node: Node = Node((0, 0), [])
-        node_index[start_node] = start_node
+        node_index[start_node] = False
         distances[start_node] = 0
-        queue.put(start_node)
+        queue.put((0, start_node))
 
-        start: float = time()
-        rate: float = 0
-        solved: int = -1
-        stats: str = ""
-        while bool(queue) is True:
-            # ===== STATS
-            solved += 1
-            if False and solved % 100 == 99:
-                rate = solved / (time() - start)
-                stats = f"rate: {rate}/s, ETA: {timedelta(seconds=(len(queue.queue) / rate))}"
-            print(f"Remaining {len(queue.queue)} items, {stats}",  end="\r", flush=True)
-            # ====
+        while not queue.empty():
+            # print(f"Remaining {len(queue.queue)} items",  end="\r", flush=True)
 
-            current_node: Node = queue.get()
+            current_score: int
+            current_node: Node
+            (current_score, current_node) = queue.get()
+
+            if node_index[current_node]:
+                continue
 
             # print("\nCurrent node:", current_node, self.get_value(current_node.position))
 
             for adj in self.get_adjacent_nodes(current_node):
-                if node_index[adj] not in queue.queue:
-                    continue
 
-                adj = node_index[adj]
                 tmp: int = distances[current_node] + self.get_value_unsafe(adj.position)
 
                 if tmp < distances[adj]:
                     distances[adj] = tmp
                     previous[adj] = current_node
-                    node_index[adj].previous_directions = list(adj.previous_directions)
+                    queue.put((tmp, adj))
+                    # node_index[adj].previous_directions = list(adj.previous_directions)
 
         # Find out node
         min_dist: int = 1_000_000_000
         end_node: Optional[Node] = None
-        for hsh, node in node_index.items():
+        for node, dist in distances.items():
         #for hsh, node in tqdm(node_index.items()):
             if node.position != end_coord:
                 continue
-            dist: int = distances[hsh]
             if dist < min_dist:
                 min_dist = dist
                 end_node = node
@@ -206,11 +192,9 @@ class MetaGraph:
             last_node = previous[last_node]
 
         # Show
-        self.print_path(path)
+        # self.print_path(path)
 
         path = path[::-1]
-        # print("Path:", "\n".join(repr(x) for x in path))
-
         return path, distances[end_node]
 
     def print_path(self, path: List[Node], pp: bool = True) -> None:
@@ -231,8 +215,9 @@ def part_one() -> int:
     graph: MetaGraph = MetaGraph(lines, 3)
     start: Coordinates = (0, 0)
     end: Coordinates = (graph.max_x-1, graph.max_y-1)
-    path, disance = graph.find_shortest_path(start, end)
 
+    _path, disance = graph.find_shortest_path(start, end)
+    return disance
     return disance
 
 
