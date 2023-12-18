@@ -1,10 +1,8 @@
+"""Basically, this is bad python code."""
 from datetime import timedelta
 from enum import Enum
 from queue import PriorityQueue
-from time import time
 from typing import *
-
-from tqdm import tqdm
 
 Coordinates = Tuple[int, int]
 
@@ -79,13 +77,15 @@ class MetaGraph:
     max_x: int
     max_y: int
 
-    move_limit: int
+    min_move_limit: int
+    max_move_limit: int
 
-    def __init__(self, lines: List[str], move_limit: int) -> None:
+    def __init__(self, lines: List[str], max_move_limit: int, min_move_limit: int) -> None:
         self.city_blocks = [[int(chr) for chr in line] for line in lines]
         self.max_x = len(self.city_blocks)
         self.max_y = len(self.city_blocks[0])
-        self.move_limit = move_limit
+        self.min_move_limit = min_move_limit
+        self.max_move_limit = max_move_limit
 
     def is_out_of_bounds(self, coord: Coordinates) -> bool:
         x, y = coord
@@ -97,7 +97,7 @@ class MetaGraph:
     def get_value_unsafe(self, coord: Coordinates) -> int:
         return self.city_blocks[coord[0]][coord[1]]
 
-    def get_adjacent_nodes(self, node: Node) -> List[Node]:
+    def get_adjacent_nodes(self, node: Node, end_coord: Coordinates) -> List[Node]:
         result: List[Node] = []
 
         prev_dir: List[Direction] = node.previous_directions
@@ -108,12 +108,23 @@ class MetaGraph:
                 continue
 
             if next_dir.opposite() in prev_dir:
+                # Attempting a U turn, which is forbidden♂
                 continue
 
-            if next_dir in prev_dir and len(prev_dir) >= self.move_limit:
+            if next_dir in prev_dir and len(prev_dir) >= self.max_move_limit:
                 # Last moves were all in the same direction, cannot continue
-                # Or attempt a U turn, which is forbidden
                 continue
+
+            if next_dir not in prev_dir and 0 < len(prev_dir) < self.min_move_limit:
+                # Not moving enough, cannot turn
+                # '0 <' for start_node
+                continue
+
+            if new_position == end_coord:
+                futur_direction: List[Direction] = [next_dir] if next_dir not in prev_dir else prev_dir + [next_dir]
+                if not (self.min_move_limit <= len(futur_direction) < self.max_move_limit):
+                    # Reaching the end with a too short path
+                    continue
 
             if next_dir in prev_dir:
                 # Continuing in the same direction
@@ -123,6 +134,7 @@ class MetaGraph:
                 result.append(Node(new_position, [next_dir]))
 
         # Return the result
+        # print(" > Adj nodes:", "\n\t".join([repr(x) for x in result]))
         return result
 
     def find_shortest_path(self, start_coord: Coordinates, end_coord: Coordinates) -> Tuple[List[Node], int]:
@@ -136,21 +148,19 @@ class MetaGraph:
         for i in range(self.max_x):
             for j in range(self.max_y):
                 for dir in Direction:
-                    for f in range(1, self.move_limit + 1):
+                    for f in range(1, self.max_move_limit + 1):
                         last_dir: List[Direction] = [dir] * f
                         node: Node = Node((i, j), last_dir)
                         node_index[node] = False
                         distances[node] = 1_000_000_000  # Almost infinity right ?
 
         # Special start node in "neutral" position
-        start_node: Node = Node((0, 0), [])
+        start_node: Node = Node(start_coord, [])
         node_index[start_node] = False
         distances[start_node] = 0
         queue.put((0, start_node))
 
         while not queue.empty():
-            # print(f"Remaining {len(queue.queue)} items",  end="\r", flush=True)
-
             current_score: int
             current_node: Node
             (current_score, current_node) = queue.get()
@@ -160,21 +170,18 @@ class MetaGraph:
 
             # print("\nCurrent node:", current_node, self.get_value(current_node.position))
 
-            for adj in self.get_adjacent_nodes(current_node):
-
+            for adj in self.get_adjacent_nodes(current_node, end_coord):
                 tmp: int = distances[current_node] + self.get_value_unsafe(adj.position)
 
                 if tmp < distances[adj]:
                     distances[adj] = tmp
                     previous[adj] = current_node
                     queue.put((tmp, adj))
-                    # node_index[adj].previous_directions = list(adj.previous_directions)
 
         # Find out node
         min_dist: int = 1_000_000_000
         end_node: Optional[Node] = None
         for node, dist in distances.items():
-        #for hsh, node in tqdm(node_index.items()):
             if node.position != end_coord:
                 continue
             if dist < min_dist:
@@ -212,13 +219,27 @@ def part_one() -> int:
     with open("input.txt", mode='r') as f_input:
         lines: List[str] = [l.strip() for l in f_input.readlines()]
 
-    graph: MetaGraph = MetaGraph(lines, 3)
+    graph: MetaGraph = MetaGraph(lines, min_move_limit=1, max_move_limit=3)
     start: Coordinates = (0, 0)
     end: Coordinates = (graph.max_x-1, graph.max_y-1)
 
     _path, disance = graph.find_shortest_path(start, end)
-    return disance
+    # graph.print_path(_path)
     return disance
 
 
-print("Part one:", part_one())
+def part_two() -> int:
+    with open("input.txt", mode='r') as f_input:
+        lines: List[str] = [l.strip() for l in f_input.readlines()]
+
+    graph: MetaGraph = MetaGraph(lines, min_move_limit=4, max_move_limit=10)
+    start: Coordinates = (0, 0)
+    end: Coordinates = (graph.max_x-1, graph.max_y-1)
+
+    _path, disance = graph.find_shortest_path(start, end)
+    # graph.print_path(_path)
+    return disance
+
+
+# print("Part one:", part_one())
+print("Part two:", part_two())
