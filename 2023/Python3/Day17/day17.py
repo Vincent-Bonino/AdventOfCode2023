@@ -122,7 +122,7 @@ class MetaGraph:
 
             if new_position == end_coord:
                 futur_direction: List[Direction] = [next_dir] if next_dir not in prev_dir else prev_dir + [next_dir]
-                if not (self.min_move_limit <= len(futur_direction) < self.max_move_limit):
+                if not (self.min_move_limit <= len(futur_direction) <= self.max_move_limit):
                     # Reaching the end with a too short path
                     continue
 
@@ -241,5 +241,5 @@ def part_two() -> int:
     return disance
 
 
-# print("Part one:", part_one())
+print("Part one:", part_one())
 print("Part two:", part_two())
