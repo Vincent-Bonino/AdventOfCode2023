@@ -1,9 +1,11 @@
 # Advent of Code
 
-My attemps to solve Eric Wastl's Advent Of Code puzzles.  
+My attempts to solve Eric Wastl's Advent Of Code puzzles.  
 <https://adventofcode.com/>
 
 ## 2023
+
+44 ⭐
 
 ### TODO
 
