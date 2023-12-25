@@ -1,6 +1,11 @@
 # === Project specific ===
-**/example.txt
+**/example*.txt
 **/input*.txt
+
+# Temporarily
+**/pyproject.toml
+**/__main__.py
+**/__init__.py
 
 # === Python ===
 
