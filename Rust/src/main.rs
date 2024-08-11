@@ -5,6 +5,7 @@ use aoc2023::aoc::{get_example_path, get_input_path, Aoc23Solution};
 use aoc2023::day01::Day01;
 use aoc2023::day02::Day02;
 use aoc2023::day03::Day03;
+use aoc2023::day04::Day04;
 
 use aoc2023::cli::Args;
 
@@ -20,6 +21,7 @@ fn main() {
     solvers.push(Box::new(Day01::default()));
     solvers.push(Box::new(Day02::default()));
     solvers.push(Box::new(Day03::default()));
+    solvers.push(Box::new(Day04::default()));
 
     // Solve each day
     for solver in solvers.iter_mut() {
