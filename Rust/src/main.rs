@@ -7,6 +7,7 @@ use aoc2023::day02::Day02;
 use aoc2023::day03::Day03;
 use aoc2023::day04::Day04;
 use aoc2023::day05::Day05;
+use aoc2023::day20::Day20;
 
 use aoc2023::cli::Args;
 
@@ -18,12 +19,14 @@ fn main() {
     // println!("Args: {args:?}");
 
     // Build array of solvers
-    let mut solvers: Vec<Box<dyn Aoc23Solution>> = Vec::new();
-    solvers.push(Box::new(Day01::default()));
-    solvers.push(Box::new(Day02::default()));
-    solvers.push(Box::new(Day03::default()));
-    solvers.push(Box::new(Day04::default()));
-    solvers.push(Box::new(Day05::default()));
+    let mut solvers: Vec<Box<dyn Aoc23Solution>> = vec![
+        Box::new(Day01::default()),
+        Box::new(Day02::default()),
+        Box::new(Day03::default()),
+        Box::new(Day04::default()),
+        Box::new(Day05::default()),
+        Box::new(Day20::default()),
+    ];
 
     // Solve each day
     for solver in solvers.iter_mut() {
