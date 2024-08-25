@@ -7,9 +7,6 @@ My attempts to solve Eric Wastl's Advent Of Code puzzles.
 
 44 ⭐
 
-### TODO
+## Highlights
 
-- [X] Day 05 - Part 2
-- [X] Day 20 - Part 1 & 2
-- [ ] Day 21 - Part 2
-- [X] Day 24 - Part 2
+- [Day 24, part 2](./Python3/Day24/part2.pdf) - I'm proud of my mathematical only resolution, solving the equations to get the answer.

@@ -194,7 +194,6 @@ def bareiss_determinant(input_matrix: np.ndarray) -> int:
 
     return matrix[n, n]
 
-
 def solve(A_matrix: np.ndarray, B_matrix: np.ndarray) -> List[int]:
     """Solve a linear system using Cramer's rule.
     
@@ -249,12 +248,13 @@ def part_two() -> int:
     be such a pain.
     That's where I gave the rest of the solving to my computer.
 
-    (Maybe one day I'll put the maths here too)
+    (See the maths in part2.pdf)
 
     Programming
     -----------
     Values of the input are rather big and asking numpy of scipy to solve the linear
     system of equation just does not work.
+    Note: input values are only integers and that is a huge condition to do what is explain below.
 
     I had to implement my own solving algorithm.
     Taking into account that float imprecision is my enemy here.
